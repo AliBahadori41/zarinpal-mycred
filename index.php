@@ -74,37 +74,77 @@ function mycred_zarinpal_plugin(){
 			*/
 			function preferences() {
 				add_filter( 'mycred_dropdown_currencies', array( $this, 'Zarinpal_Iranian_currencies_By_BAHADORI' ) );
-				$prefs = $this->prefs; ?>
-
-				<label class="subheader" for="<?php echo $this->field_id( 'zarinpal_merchant' ); ?>"><?php _e( 'مرچنت', 'mycred' ); ?></label>
-				<ol>
-					<li>
-						<div class="h2"><input type="text" name="<?php echo $this->field_name( 'zarinpal_merchant' ); ?>" id="<?php echo $this->field_id( 'zarinpal_merchant' ); ?>" value="<?php echo $prefs['zarinpal_merchant']; ?>" class="long" /></div>
-					</li>
-				</ol>
-				<label class="subheader" for="<?php echo $this->field_id( 'zarinpal_name' ); ?>"><?php _e( 'نام نمایشی درگاه', 'mycred' ); ?></label>
-				<ol>
-					<li>
-						<div class="h2"><input type="text" name="<?php echo $this->field_name( 'zarinpal_name' ); ?>" id="<?php echo $this->field_id( 'zarinpal_name' ); ?>" value="<?php echo $prefs['zarinpal_name'] ? $prefs['zarinpal_name'] : 'زرین پال'; ?>"  /></div>
-					</li>
-				</ol>
-				<label class="subheader" for="<?php echo $this->field_id( 'currency' ); ?>"><?php _e( 'Currency', 'mycred' ); ?></label>
-				<ol>
-					<li>
-						<?php $this->currencies_dropdown( 'currency', 'mycred-gateway-zarinpal-currency' ); ?>
-					</li>
-				</ol>
-				<label class="subheader" for="<?php echo $this->field_id( 'item_name' ); ?>"><?php _e( 'Item Name', 'mycred' ); ?></label>
-				<ol>
-					<li>
-						<div class="h2"><input type="text" name="<?php echo $this->field_name( 'item_name' ); ?>" id="<?php echo $this->field_id( 'item_name' ); ?>" value="<?php echo $prefs['item_name']; ?>" class="long" /></div>
-						<span class="description"><?php _e( 'Description of the item being purchased by the user.', 'mycred' ); ?></span>
-					</li>
-				</ol>
-				<label class="subheader"><?php _e( 'Exchange Rates', 'mycred' ); ?></label>
-				<ol>
-					<?php $this->exchange_rate_setup(); ?>
-				</ol>
+				$prefs = $this->prefs;
+			?>
+			
+			<div class="row">
+				<div class="col-12 col-xl-6">
+					<div class="form-group">
+						<div class="mb-3">
+							<label for="<?php echo $this->field_id( 'zarinpal_merchant' ); ?>" class="form-label">مرچنت کد</label>
+							<input
+								type="text"
+								class="form-control"
+								name="<?php echo $this->field_name( 'zarinpal_merchant' ); ?>"
+								id="<?php echo $this->field_id( 'zarinpal_merchant' ); ?>"
+								value="<?php echo $prefs['zarinpal_merchant']; ?>"
+								aria-describedby="helpId"
+								placeholder="مرچنت کد"
+							/>
+							<small id="helpId" class="form-text text-muted">برای دریافت مرچنت کد به حساب کاربری خود در <a target="_blank" href="https://zarinpal.com">زرین پال</a> مرجعه کنید.</small>
+						</div>
+					</div>
+				</div>
+				<div class="col-12 col-xl-6">
+					<div class="form-group">
+						<div class="mb-3">
+							<label for="<?php echo $this->field_id( 'zarinpal_name' ); ?>" class="form-label">نام نمایشی درگاه</label>
+							<input
+								type="text"
+								class="form-control"
+								name="<?php echo $this->field_name( 'zarinpal_name' ); ?>"
+								id="<?php echo $this->field_id( 'zarinpal_name' ); ?>"
+								value="<?php echo $prefs['zarinpal_name']; ?>"
+								aria-describedby="helpId"
+								placeholder="نام نمایشی درگاه"
+							/>
+							<small id="helpId" class="form-text text-muted">نامی دلخواه خود که قصد دارید به کاربر نمایش دهید.</small>
+						</div>
+					</div>
+				</div>
+				<div class="col-12 col-xl-6">
+					<div class="form-group">
+						<div class="mb-3">
+							<label for="zarinpal_currency" class="form-label">ارز درگاه</label>
+							<?php $this->currencies_dropdown( 'currency', 'mycred-gateway-zarinpal-currency' ); ?>
+							<small id="helpId" class="form-text text-muted">انتخاب کردن ارز درگاه</small>
+						</div>
+					</div>
+				</div>
+				<div class="col-12 col-xl-6">
+					<div class="form-group">
+						<div class="mb-3">
+							<div class="mb-3">
+								<label for="<?php echo $this->field_id( 'item_name' ); ?>" class="form-label">توضیح تراکنش</label>
+								<input
+									type="text"
+									class="form-control"
+									aria-describedby="helpId"
+									placeholder="توضیحات تراکنش"
+									name="<?php echo $this->field_name( 'item_name' ); ?>"
+									id="<?php echo $this->field_id( 'item_name' ); ?>"
+									value="<?php echo $prefs['item_name']; ?>"
+								/>
+								<small id="helpId" class="form-text text-muted">توضیحاتی که برای هر تراکنش ایجاد شده ثبت می شود.</small>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-12">
+				<?php $this->exchange_rate_setup(); ?>
+				</div>
+			</div>
+			
 			<?php
 			}
 		
