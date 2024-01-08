@@ -53,7 +53,7 @@ function mycred_zarinpal_plugin(){
 						'defaults'         => array(
 							'zarinpal_merchant'          => '',
 							'zarinpal_name'          => 'زرین پال',
-							'currency'         => 'ریال',
+							'currency'         => 'IRR',
 							'exchange'         => $default_exchange,
 							'item_name'        => __( 'Purchase of myCRED %plural%', 'mycred' ),
 						)
@@ -62,8 +62,8 @@ function mycred_zarinpal_plugin(){
 		
 			public function Zarinpal_Iranian_currencies_By_BAHADORI( $currencies ) {
 				unset( $currencies );
-				$currencies['ریال'] = 'ریال';
-				$currencies['تومان'] = 'تومان';
+				$currencies['IRR'] = 'ریال';
+				$currencies['IRT'] = 'تومان';
 				return $currencies;
 			}
 			
@@ -91,7 +91,7 @@ function mycred_zarinpal_plugin(){
 								aria-describedby="helpId"
 								placeholder="مرچنت کد"
 							/>
-							<small id="helpId" class="form-text text-muted">برای دریافت مرچنت کد به حساب کاربری خود در <a target="_blank" href="https://zarinpal.com">زرین پال</a> مرجعه کنید.</small>
+							<small id="helpId" class="form-text text-muted">برای دریافت مرچنت کد به حساب کاربری خود در <a target="_blank" href="https://zarinpal.com">زرین پال</a> مرجعه کنید</small>
 						</div>
 					</div>
 				</div>
@@ -211,29 +211,23 @@ function mycred_zarinpal_plugin(){
 				$item_name = $mycred->template_tags_general( $item_name );
 	
 				$from_user = get_userdata( $from );
-			
 				$return_url =  add_query_arg('payment_id', $this->transaction_id, $this->callback_url());
-			
 				$buyername = $from_user->first_name . " " . $from_user->last_name;
 				$buyername = strlen($buyername) > 2 ? "|".$buyername : "";
-			
-			
-				$MerchantID = $this->prefs['zarinpal_merchant'];  
-				$Amount = ($this->prefs['currency'] == 'تومان') ? $cost : ($cost/10);
-				$Amount = intval( str_replace( ',' , '', $Amount) );
 				$Description = $item_name.$buyername;
 				$Description = $Description ? $Description : "خرید اعتبار";
-			
 
-                $data = array("merchant_id" => $MerchantID,
-                    "amount" => $Amount,
+                $data = array(
+					"merchant_id" => $this->prefs['zarinpal_merchant'],
+                    "amount" => $cost,
+					"currency" => $this->prefs['currency'],
                     "callback_url" => $return_url,
                     "description" => $item_name.$buyername
                 );
 
                 $jsonData = json_encode($data);
                 $ch = curl_init('https://api.zarinpal.com/pg/v4/payment/request.json');
-                curl_setopt($ch, CURLOPT_USERAGENT, 'ZarinPal Rest Api v1');
+                curl_setopt($ch, CURLOPT_USERAGENT, 'ZarinPal Rest Api v4');
                 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -262,7 +256,7 @@ function mycred_zarinpal_plugin(){
 
                     }
                 }
-                $message = 'خطا رخ داده است د';
+                $message = 'خطا رخ داده است.';
                 $message = isset($result->errorMessage) ? $result->errorMessage : $message;
 
                 $this->log_call($payment, [__($message, 'mycred')]);
@@ -291,17 +285,19 @@ function mycred_zarinpal_plugin(){
 						$pending_payment = (array) $pending_payment;
 					
 					if ( $pending_payment !== false ) {
-					
-						$cost = ( str_replace( ',' , '', $pending_payment['cost']) );
-						$cost = (int) $cost;
-						$Amount = ($this->prefs['currency'] == 'تومان') ? $cost : ($cost/10);
-						
-						$MerchantID = $this->prefs['zarinpal_merchant'];  
-						$Authority = $_GET['Authority'];
 						if($_GET['Status'] == 'OK'){
-					
+							$MerchantID = $this->prefs['zarinpal_merchant'];  
+							$Authority = $_GET['Authority'];
 
-                            $data = array("merchant_id" => $MerchantID, "authority" => $Authority, "amount" => $Amount);
+							$cost = ( str_replace( ',' , '', $pending_payment['cost']) );
+							$cost = (int) $cost;
+
+                            $data = array(
+								"merchant_id" => $MerchantID,
+								"authority" => $Authority,
+								"amount" => $cost,
+							);
+
                             $jsonData = json_encode($data);
                             $ch = curl_init('https://api.zarinpal.com/pg/v4/payment/verify.json');
                             curl_setopt($ch, CURLOPT_USERAGENT, 'ZarinPal Rest Api v4');
