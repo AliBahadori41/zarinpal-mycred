@@ -291,8 +291,8 @@ function mycred_zarinpal_plugin(){
                         $this->log_call($payment, [__($message, 'mycred')]);
 
                         wp_die($message);
-                        exit;
-			}*/
+			           exit;*/
+			}
 
 			/**
 			* Process
