@@ -56,7 +56,6 @@ function mycred_zarinpal_plugin(){
 							'currency'         => 'ریال',
 							'exchange'         => $default_exchange,
 							'item_name'        => __( 'Purchase of myCRED %plural%', 'mycred' ),
-							'server'            => 'German',
 						)
 				), $gateway_prefs );
 			}
@@ -95,25 +94,6 @@ function mycred_zarinpal_plugin(){
 						<?php $this->currencies_dropdown( 'currency', 'mycred-gateway-zarinpal-currency' ); ?>
 					</li>
 				</ol>
-				<label class="subheader" for="<?php echo $this->field_id( 'server' ); ?>"><?php _e( 'سرور زرین پال', 'mycred' ); ?></label>
-				<ol>
-					<li>
-						<select name="<?php echo $this->field_name( 'server' ); ?>" id="<?php echo $this->field_id( 'server' ); ?>">
-						<?php
-						$options = array(
-							'German'   => __( 'آلمان', 'mycred' ),
-							'Iran'    => __( 'ایران', 'mycred' )
-						);
-						foreach ( $options as $value => $label ) {
-							echo '<option value="' . $value . '"';
-							if ( $prefs['server'] == $value ) 
-								echo ' selected="selected"';
-							echo '>' . $label . '</option>';
-						}
-						?>
-						</select>
-					</li>
-				</ol>
 				<label class="subheader" for="<?php echo $this->field_id( 'item_name' ); ?>"><?php _e( 'Item Name', 'mycred' ); ?></label>
 				<ol>
 					<li>
@@ -139,7 +119,6 @@ function mycred_zarinpal_plugin(){
 				$new_data['zarinpal_name'] = sanitize_text_field( $data['zarinpal_name'] );
 				$new_data['currency'] = sanitize_text_field( $data['currency'] );
 				$new_data['item_name'] = sanitize_text_field( $data['item_name'] );
-				$new_data['server'] = sanitize_text_field( $data['server'] );
 
 				// If exchange is less then 1 we must start with a zero
 				if ( isset( $data['exchange'] ) ) {
