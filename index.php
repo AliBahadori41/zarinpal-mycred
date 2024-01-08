@@ -166,12 +166,6 @@ function mycred_zarinpal_plugin(){
 					$this->transaction_id = get_the_title( $post_id );
 				}
 
-				// Thank you page
-				//$thankyou_url = $this->get_thankyou();
-
-				// Cancel page
-				//$cancel_url = $this->get_cancelled( $this->transaction_id );
-
 				// Item Name
 				$item_name = str_replace( '%number%', $amount, $this->prefs['item_name'] );
 				$item_name = $mycred->template_tags_general( $item_name );
@@ -189,27 +183,14 @@ function mycred_zarinpal_plugin(){
 				$Amount = intval( str_replace( ',' , '', $Amount) );
 				$Description = $item_name.$buyername;
 				$Description = $Description ? $Description : "خرید اعتبار";
-				$CallbackURL = $return_url;
-				$Email = $from_user->user_email; 
-				$Mobile ='-'; 
-				$Server = ($this->prefs['server'] == 'Iran' ) ? 'https://ir.zarinpal.com/pg/services/WebGate/wsdl' : 'https://de.zarinpal.com/pg/services/WebGate/wsdl';
-			/*	$client = new SoapClient( $Server, array('encoding' => 'UTF-8'));
-				$result = $client->PaymentRequest(
-						array(
-								'MerchantID' 	=> $MerchantID,
-								'Amount' 	=> $Amount,
-								'Description' 	=> $Description,
-								'Email' 	=> $Email,
-								'Mobile' 	=> $Mobile,
-								'CallbackURL' 	=> $CallbackURL
-							)
-				);*/
+			
 
                 $data = array("merchant_id" => $MerchantID,
                     "amount" => $Amount,
                     "callback_url" => $return_url,
                     "description" => $item_name.$buyername
                 );
+
                 $jsonData = json_encode($data);
                 $ch = curl_init('https://api.zarinpal.com/pg/v4/payment/request.json');
                 curl_setopt($ch, CURLOPT_USERAGENT, 'ZarinPal Rest Api v1');
@@ -234,8 +215,6 @@ function mycred_zarinpal_plugin(){
                             header('Location: https://www.zarinpal.com/pg/StartPay/' . $result['data']["authority"]);
                         }
                     } else {
-                       // echo'Error Code: ' . $result['errors']['code'];
-                       // echo'message: ' .  $result['errors']['message'];
 
                         $this->get_page_header( __( 'Processing payment &hellip;', 'mycred' ) );
                         echo $this->Fault($result['errors']['code']);
@@ -251,26 +230,6 @@ function mycred_zarinpal_plugin(){
                 wp_die($message);
                 exit;
 
-
-                //Redirect to Zarinpal
-		/*		if($result->Status == 100)
-				{
-					Header('Location: https://www.zarinpal.com/pg/StartPay/'.$result->Authority);
-				} 
-				else 
-				{	
-					$this->get_page_header( __( 'Processing payment &hellip;', 'mycred' ) ); 
-					echo $this->Fault($result->Status);
-					$this->get_page_footer();
-				}
-				// Exit
-		        $message = 'خطا رخ داده است د';
-                        $message = isset($result->errorMessage) ? $result->errorMessage : $message;
-
-                        $this->log_call($payment, [__($message, 'mycred')]);
-
-                        wp_die($message);
-			           exit;*/
 			}
 
 			/**
@@ -300,15 +259,7 @@ function mycred_zarinpal_plugin(){
 						$MerchantID = $this->prefs['zarinpal_merchant'];  
 						$Authority = $_GET['Authority'];
 						if($_GET['Status'] == 'OK'){
-						/*	$Server = ($this->prefs['server'] == 'Iran' ) ? 'https://ir.zarinpal.com/pg/services/WebGate/wsdl' : 'https://de.zarinpal.com/pg/services/WebGate/wsdl';
-							$client = new SoapClient( $Server, array('encoding' => 'UTF-8')); 
-							$result = $client->PaymentVerification(
-								array(
-										'MerchantID'	 => $MerchantID,
-										'Authority' 	 => $Authority,
-										'Amount'	 => $Amount
-									)
-							);*/
+					
 
                             $data = array("merchant_id" => $MerchantID, "authority" => $Authority, "amount" => $Amount);
                             $jsonData = json_encode($data);
@@ -330,7 +281,6 @@ function mycred_zarinpal_plugin(){
                                 echo "cURL Error #:" . $err;
                             } else {
                                 if ($result['data']['code'] == 100) {
-                                   // echo 'Transation success. RefID:' . $result['data']['ref_id'];
                                     if ( $this->complete_payment( $org_pending_payment, $result['data']['ref_id'] ) ) {
                                         $new_call[] = sprintf( __( 'تراکنش با موفقیت به پایان رسید . کد رهگیری : %s', 'mycred' ), $result['data']['ref_id'] );
                                         $this->trash_pending_payment( $pending_post_id );
@@ -348,39 +298,9 @@ function mycred_zarinpal_plugin(){
 
                             wp_redirect($redirect);
                             die();
-
-
-
-					/*		if($result->Status == 100){
-								if ( $this->complete_payment( $org_pending_payment, $result->RefID ) ) {
-									$new_call[] = sprintf( __( 'تراکنش با موفقیت به پایان رسید . کد رهگیری : %s', 'mycred' ), $result->RefID );
-									$this->trash_pending_payment( $pending_post_id );
-									$redirect = $this->get_thankyou();
-								}
-								else
-									$new_call[] = __( 'در حین تراکنش خطای نامشخصی رخ داده است .', 'mycred' );
-							}
-							else
-								$new_call[] = sprintf( __( 'در حین تراکنش خطای رو به رو رخ داده است : %s', 'mycred' ), $this->Fault($result->Status) );
 						}
-						else
-							$new_call[] = __( 'تراکنش به دلیل انصراف کاربر از ادامه پرداخت نا تمام باقی ماند .', 'mycred' );
-				
 					}
-					else
-						$new_call[] = __( 'در حین تراکنش خطای نامشخصی رخ داده است .', 'mycred' );
-			
-			
-					if ( !empty( $new_call ) )
-						$this->log_call( $pending_post_id, $new_call );
-				
-					wp_redirect($redirect);
-					die();*/
-				
 				}
-
-					}
-                    }
 			}
 			
 			
