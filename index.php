@@ -242,7 +242,7 @@ function mycred_zarinpal_plugin(){
                 curl_close($ch);
 
                 if ($err) {
-                    echo "cURL Error #:" . $err;
+                    echo " خطا در اتصال به درگاه : " . $err;
                 } else {
                     if (empty($result['errors'])) {
                         if ($result['data']['code'] == 100) {
@@ -251,7 +251,7 @@ function mycred_zarinpal_plugin(){
                     } else {
 
                         $this->get_page_header( __( 'Processing payment &hellip;', 'mycred' ) );
-                        echo $this->Fault($result['errors']['code']);
+                        echo self::error_message($result['errors']['code']);
                         $this->get_page_footer();
 
                     }
@@ -314,17 +314,22 @@ function mycred_zarinpal_plugin(){
                             $result = json_decode($result, true);
                             $err = curl_error($ch);
                             if ($err) {
-                                echo "cURL Error #:" . $err;
+                                echo "خطا در اتصال به درگاه برای وریفای تراکنش : " . $err;
                             } else {
-                                if ($result['data']['code'] == 100) {
+								$code = $result['data']['code'];
+                                if ($code === 100) {
                                     if ( $this->complete_payment( $org_pending_payment, $result['data']['ref_id'] ) ) {
                                         $new_call[] = sprintf( __( 'تراکنش با موفقیت به پایان رسید . کد رهگیری : %s', 'mycred' ), $result['data']['ref_id'] );
                                         $this->trash_pending_payment( $pending_post_id );
                                         $redirect = $this->get_thankyou();
                                     }
+
+                                } elseif ($code === 101) {
+									$new_call[] = sprintf( __( ' تراکنش یکبار قبلا وریفای شده است.  : %s', 'mycred' ), $result['data']['ref_id'] );
+									$redirect = $this->get_thankyou();
                                 } else {
-                                    echo'code: ' . $result['errors']['code'];
-                                    echo'message: ' .  $result['errors']['message'];
+                                    echo' خطا : </br>' ;
+                                    echo self::error_message($result['errors']['code']);
                                     $new_call[] = sprintf( __( 'در حین تراکنش خطای رو به رو رخ داده است : %s', 'mycred' ),$result['errors']['code'] );
                                 }
                             }
@@ -339,7 +344,6 @@ function mycred_zarinpal_plugin(){
 				}
 			}
 			
-			
 			/**
 			* Returning
 			* @since 1.4
@@ -352,65 +356,88 @@ function mycred_zarinpal_plugin(){
 				}
 			}
 
-
-			private static function Fault($err_code){
-				$message = " ";
-				switch($err_code)
-				{
-					case "-1" :
-						$message = "اطلاعات ارسال شده ناقص است .";
+			/**
+			 * Zarinpal error message.
+			 * 
+			 * @param int $code
+			 * @return string
+			 */
+			public static function error_message($code)
+			{
+				$message = null;
+				switch ($code) {
+					case $code == -9:
+						$message = ('اطلاعات ارسال شده نادرست می باشد.');
+						$message .= "<br>" . ('1- مرچنت کد داخل تنظیمات وارد نشده باشد');
+						$message .= "<br>" . ('2- مبلغ پرداختی کمتر یا بیشتر از حد مجاز می باشد');
+					break; 
+					case $code == -10:
+						$message = ('ای پی یا مرچنت كد پذیرنده صحیح نیست.');
+					break; 
+					case $code == -11:
+						$message = ('مرچنت کد فعال نیست، پذیرنده مشکل خود را به امور مشتریان زرین‌پال ارجاع دهد.');
+					break; 
+					case $code == -12:
+						$message = ('تلاش بیش از دفعات مجاز در یک بازه زمانی کوتاه به امور مشتریان زرین پال اطلاع دهید');
+					break; 
+					case $code == -15:
+						$message = ('درگاه پرداخت به حالت تعلیق در آمده است، پذیرنده مشکل خود را به امور مشتریان زرین‌پال ارجاع دهد.');
+					break; 
+					case $code == -16:
+						$message = ('سطح تایید پذیرنده پایین تر از سطح نقره ای است.');
+					break; 
+					case $code == -17:
+						$message = ('محدودیت پذیرنده در سطح آبی');
+					break; 
+					case $code == -30:
+						$message = ('پذیرنده اجازه دسترسی به سرویس تسویه اشتراکی شناور را ندارد.');
+					break; 
+					case $code == -31:
+						$message = ('حساب بانکی تسویه را به پنل اضافه کنید. مقادیر وارد شده برای تسهیم درست نیست. پذیرنده جهت استفاده از خدمات سرویس تسویه اشتراکی شناور، باید حساب بانکی معتبری به پنل کاربری خود اضافه نماید.');
+					break; 
+					case $code == -32:
+						$message = ('مبلغ وارد شده از مبلغ کل تراکنش بیشتر است.');
+					break; 
+					case $code == -33:
+						$message = ('درصدهای وارد شده صحیح نیست.');
+					break; 
+					case $code == -34:
+						$message = ('مبلغ وارد شده از مبلغ کل تراکنش بیشتر است.');
+					break; 
+					case $code == -35:
+						$message = ('تعداد افراد دریافت کننده تسهیم بیش از حد مجاز است.');
+					break; 
+					case $code == -36:
+						$message = ('حداقل مبلغ جهت تسهیم باید 10000 ریال باشد');
+					break; 
+					case $code == -37:
+						$message = ('یک یا چند شماره شبای وارد شده برای تسهیم از سمت بانک غیر فعال است.');
+					break; 
+					case $code == -38:
+						$message = ('خط،عدم تعریف صحیح شبا،لطفا دقایقی دیگر تلاش کنید.');
+					break; 
+					case $code == -39:
+						$message = ('خطایی رخ داده است به امور مشتریان زرین پال اطلاع دهید');
+					break; 
+					case $code == -50:
+						$message = ('مبلغ پرداخت شده با مقدار مبلغ ارسالی در متد وریفای متفاوت است.');
+					break; 
+					case $code == -51:
+						$message = ('پرداخت ناموفق');
+					break; 
+					case $code == -52:
+						$message = ('خطای غیر منتظره‌ای رخ داده است. پذیرنده مشکل خود را به امور مشتریان زرین‌پال ارجاع دهد.');
+					break; 
+					case $code == -53:
+						$message = ('پرداخت متعلق به این مرچنت کد نیست.');
+					break; 
+					case $code == -54:
+						$message = ('اتوریتی نامعتبر است.');
 					break;
-
-					case "-2" :
-						$message = "آی پی یا مرچنت زرین پال اشتباه است .";
-					break;
-
-					case "-3" :
-						$message = "با توجه به محدودیت های شاپرک امکان پرداخت با رقم درخواست شده میسر نمیباشد .";
-					break;
-                                                
-					case "-4" :
-						$message = "سطح تایید پذیرنده پایین تر از سطح نقره ای میباشد .";
-					break;
-												
-					case "-11" :
-						$message = "درخواست مورد نظر یافت نشد .";
-					break;
-												
-					case "-21" :
-						$message = "هیچ نوع عملیات مالی برای این تراکنش یافت نشد .";
-					break;
-												
-					case "-22" :
-						$message = "تراکنش نا موفق میباشد .";
-					break;
-												
-					case "-33" :
-						$message = "رقم تراکنش با رقم وارد شده مطابقت ندارد .";
-					break;
-												
-					case "-40" :
-						$message = "اجازه دسترسی به متد مورد نظر وجود ندارد .";
-					break;
-												
-					case "-54" :
-						$message = "درخواست مورد نظر آرشیو شده است .";
-					break;
-												
-					case "100" :
-						$message = "تراکنش با موفقیت به پایان رسید .";
-					break;
-				
-					case "101" :
-						$message = "تراکنش با موفقیت به پایان رسیده بود و تاییدیه آن نیز انجام شده بود .";
-					break;			
 				}
 				return $message;
 			}
-
-			
 		}
-
 	}
 }
 ?>
